@@ -80,6 +80,9 @@ var state = {
   // Skip screenshot toggle
   skipScreenshot: false,
 
+  // Locale data for i18n
+  locale: null,
+
   // Annotations
   annotations: [], // array of stroke objects
   redoStack: [], // undone annotations for redo
@@ -1073,6 +1076,90 @@ function positionPopup(popup, anchorEl) {
   popup.style.top = py + 'px';
 }
 
+// ─── i18n ─────────────────────────────────────────────────────────────────
+
+function applyTranslations(t) {
+  if (!t) return;
+  state.locale = t;
+
+  // Toolbar label
+  var tl = document.querySelector('.tool-label');
+  if (tl) tl.textContent = t.tools || 'TOOLS';
+
+  // Tool buttons
+  var toolMap = { move: 'move', pencil: 'pencil', shape: 'shape', eraser: 'eraser', text: 'text', undo: 'undo', redo: 'redo' };
+  Object.keys(toolMap).forEach(function(k) {
+    var btn = document.querySelector('[data-tool="' + k + '"]');
+    if (btn) btn.title = t[toolMap[k]] || k;
+  });
+
+  // Confirm / Cancel
+  var confirmBtns = ['confirmBtn', 'promptConfirmBtn'];
+  confirmBtns.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.title = t.confirm || 'Confirm';
+  });
+  var cancelBtns = ['cancelBtn', 'promptCancelBtn'];
+  cancelBtns.forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.title = t.cancel || 'Cancel';
+  });
+
+  // Screenshot toggle
+  var tog = document.getElementById('screenshotToggle');
+  if (tog) {
+    tog.title = state.skipScreenshot
+      ? (t.screenshotDisabled || 'Screenshot disabled (click to enable)')
+      : (t.screenshotEnabled || 'Screenshot enabled (click to disable)');
+  }
+
+  // Pencil settings labels
+  var pLabels = document.querySelectorAll('#pencilSettings .setting-label');
+  if (pLabels[0]) pLabels[0].textContent = t.color || 'COLOR';
+  if (pLabels[1]) pLabels[1].textContent = t.width || 'WIDTH';
+
+  // Shape toolbar
+  var shapeMap = { rect: 'rectangle', ellipse: 'ellipse', line: 'line', arrow: 'arrow' };
+  Object.keys(shapeMap).forEach(function(k) {
+    var btn = document.querySelector('[data-shape="' + k + '"]');
+    if (btn) btn.title = t[shapeMap[k]] || k;
+  });
+  var fillBtn = document.getElementById('shapeFillBtn');
+  if (fillBtn) fillBtn.title = t.fill || 'Fill';
+  var strokeBtn = document.getElementById('shapeStrokeBtn');
+  if (strokeBtn) strokeBtn.title = t.stroke || 'Stroke';
+
+  // Fill popup
+  var fillLbl = document.querySelector('#fillPopup .popup-label');
+  if (fillLbl) fillLbl.textContent = t.fill || 'FILL';
+  var fillNone = document.getElementById('fillNone');
+  if (fillNone) fillNone.title = t.noFill || 'No fill';
+
+  // Stroke popup
+  var strkLbl = document.querySelector('#strokePopup .popup-label');
+  if (strkLbl) strkLbl.textContent = t.stroke || 'STRK';
+  var strkNone = document.getElementById('strokeNone');
+  if (strkNone) strkNone.title = t.noStroke || 'No stroke';
+
+  // Opacity labels (both fill and stroke popups use .popup-label + .opacity-row)
+  var opRows = document.querySelectorAll('.settings-popup .opacity-row .popup-label');
+  opRows.forEach(function(el) {
+    el.textContent = t.opacity || 'OP';
+  });
+
+  // Text color label
+  var tcLabel = document.querySelector('#textColorSettings > span');
+  if (tcLabel) tcLabel.textContent = t.color || 'COLOR';
+
+  // Prompt toolbar
+  var ptLabel = document.querySelector('.pt-label');
+  if (ptLabel) ptLabel.textContent = t.prompt || 'PROMPT';
+  var pi = document.getElementById('promptInput');
+  if (pi) pi.placeholder = t.promptPlaceholder || 'Custom prompt (leave empty to use default)';
+  var pc = document.getElementById('promptClearBtn');
+  if (pc) pc.title = t.clear || 'Clear';
+}
+
 // ─── Confirm ───────────────────────────────────────────────────────────────
 
 function doConfirm() {
@@ -1167,16 +1254,17 @@ document.addEventListener('DOMContentLoaded', function() {
   if (toggleBtn) {
     toggleBtn.addEventListener('click', function() {
       state.skipScreenshot = !state.skipScreenshot;
+      var t = state.locale;
       if (state.skipScreenshot) {
         this.classList.remove('toggle-on');
         this.classList.add('toggle-off');
         this.textContent = '⊘';
-        this.title = 'Screenshot disabled (click to enable)';
+        this.title = (t && t.screenshotDisabled) || 'Screenshot disabled (click to enable)';
       } else {
         this.classList.remove('toggle-off');
         this.classList.add('toggle-on');
         this.textContent = '◉';
-        this.title = 'Screenshot enabled (click to disable)';
+        this.title = (t && t.screenshotEnabled) || 'Screenshot enabled (click to disable)';
       }
     });
   }
@@ -1202,6 +1290,15 @@ document.addEventListener('DOMContentLoaded', function() {
       state.promptHistoryIndex = state.promptHistory.length;
       console.log('[History] restored:', state.promptHistory.length, 'items');
     }
+
+    // Load locale and apply translations
+    var lang = data.lang || 'zh';
+    window.regionCaptureAPI.getLocale(lang).then(function(locale) {
+      var rc = locale && locale.regionCapture;
+      if (rc) applyTranslations(rc);
+    }).catch(function(err) {
+      console.log('[i18n] Failed to load locale:', err.message);
+    });
 
     // Set canvas to physical pixel dimensions for sharp rendering
     // Use CSS to constrain display size to the window

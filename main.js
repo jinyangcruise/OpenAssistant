@@ -738,6 +738,7 @@ function startRegionCapture(fullScreenshotBuffer) {
         screenBounds: { width: workArea.width, height: workArea.height },
         dpr: scaleFactor,
         promptHistory: regionPromptHistory,
+        lang: store.get('language') || 'zh',
       });
     });
     // Force window to foreground using Windows API (circumvents focus-stealing prevention)

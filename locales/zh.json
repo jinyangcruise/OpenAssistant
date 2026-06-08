@@ -123,6 +123,35 @@
     "regionDesc": "手动拖动选择矩形区域，可添加标注，确认后发送给 AI 分析，回复将自动插入到光标位置"
   },
 
+  "regionCapture": {
+    "tools": "工具",
+    "move": "移动选区",
+    "pencil": "铅笔",
+    "shape": "形状",
+    "eraser": "橡皮",
+    "text": "文字",
+    "undo": "撤销",
+    "redo": "重做",
+    "confirm": "确定",
+    "cancel": "取消",
+    "color": "颜色",
+    "width": "粗细",
+    "rectangle": "矩形",
+    "ellipse": "椭圆",
+    "line": "直线",
+    "arrow": "箭头",
+    "fill": "填充",
+    "stroke": "描边",
+    "noFill": "无填充",
+    "noStroke": "无描边",
+    "opacity": "透明",
+    "prompt": "提示词",
+    "promptPlaceholder": "自定义提示词（留空则使用默认）",
+    "clear": "清除",
+    "screenshotEnabled": "已启用截图（点击禁用）",
+    "screenshotDisabled": "已禁用截图（点击启用）"
+  },
+
   "faq": {
     "title": "常见问题",
     "q1": "无法连接到豆包桌面端怎么办？",

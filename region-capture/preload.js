@@ -23,4 +23,7 @@ contextBridge.exposeInMainWorld('regionCaptureAPI', {
   cancelRegion: () => {
     ipcRenderer.send('region-capture-cancel');
   },
+
+  // Renderer → Main: load locale file
+  getLocale: (lang) => ipcRenderer.invoke('get-locale', lang),
 });

@@ -122,6 +122,35 @@
     "regionDesc": "Drag to select an area, add annotations, confirm to send to AI; reply auto-inserts at cursor"
   },
 
+  "regionCapture": {
+    "tools": "TOOLS",
+    "move": "Move selection",
+    "pencil": "Pencil",
+    "shape": "Shape",
+    "eraser": "Eraser",
+    "text": "Text",
+    "undo": "Undo",
+    "redo": "Redo",
+    "confirm": "Confirm",
+    "cancel": "Cancel",
+    "color": "COLOR",
+    "width": "WIDTH",
+    "rectangle": "Rectangle",
+    "ellipse": "Ellipse",
+    "line": "Line",
+    "arrow": "Arrow",
+    "fill": "Fill",
+    "stroke": "Stroke",
+    "noFill": "No fill",
+    "noStroke": "No stroke",
+    "opacity": "OP",
+    "prompt": "PROMPT",
+    "promptPlaceholder": "Custom prompt (leave empty to use default)",
+    "clear": "Clear",
+    "screenshotEnabled": "Screenshot enabled (click to disable)",
+    "screenshotDisabled": "Screenshot disabled (click to enable)"
+  },
+
   "faq": {
     "title": "FAQ",
     "q1": "Cannot connect to Doubao?",
