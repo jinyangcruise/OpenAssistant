@@ -47,6 +47,8 @@ let regionWindow;
 let overlayDragState = null;
 let tray;
 let isProcessing = false;
+/** Persisted prompt history from region capture (shared across sessions) */
+let regionPromptHistory = [];
 let currentAbortController = null;
 /** Current AI agent adapter instance (used to stop Doubao generation on cancel) */
 let currentAdapter = null;
@@ -674,6 +676,11 @@ function startRegionCapture(fullScreenshotBuffer) {
       settled = true;
       cleanup();
       try {
+        // Update persisted prompt history
+        if (data.promptHistory && Array.isArray(data.promptHistory)) {
+          regionPromptHistory = data.promptHistory;
+          //console.log('[History] updated, total:', regionPromptHistory.length);
+        }
         var img = nativeImage.createFromDataURL(data.imageDataUrl || data);
         resolve({
           buffer: img.toPNG(),
@@ -722,6 +729,7 @@ function startRegionCapture(fullScreenshotBuffer) {
         dataUrl: displayDataUrl,
         screenBounds: { width: workArea.width, height: workArea.height },
         dpr: scaleFactor,
+        promptHistory: regionPromptHistory,
       });
     });
     // Force window to foreground using Windows API (circumvents focus-stealing prevention)

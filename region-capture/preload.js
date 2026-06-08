@@ -6,6 +6,7 @@ const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('regionCaptureAPI', {
   // Main → Renderer: receive screenshot data and display info
+  // data: { dataUrl, screenBounds, dpr, promptHistory? }
   onCaptureStart: (callback) => {
     const handler = (_event, data) => callback(data);
     ipcRenderer.on('region-capture-start', handler);
@@ -13,7 +14,7 @@ contextBridge.exposeInMainWorld('regionCaptureAPI', {
   },
 
   // Renderer → Main: user confirmed selection with final image
-  // data: { imageDataUrl: string, customPrompt?: string }
+  // data: { imageDataUrl, customPrompt?, promptHistory? }
   confirmRegion: (data) => {
     ipcRenderer.send('region-capture-confirm', data);
   },

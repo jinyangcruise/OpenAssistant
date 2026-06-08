@@ -918,14 +918,23 @@ function selectTool(tool) {
 function saveToPromptHistory(text) {
   if (!text || !text.trim()) return;
   text = text.trim();
-  // Don't save duplicates
   if (state.promptHistory.length > 0 && state.promptHistory[state.promptHistory.length - 1] === text) return;
   state.promptHistory.push(text);
-  state.promptHistoryIndex = state.promptHistory.length; // past the end (for PageDown)
+  state.promptHistoryIndex = state.promptHistory.length;
+  //console.log('[History] saved, total:', state.promptHistory.length, 'items:', JSON.stringify(state.promptHistory));
 }
 
 function navigatePromptHistory(direction) {
-  if (state.promptHistory.length === 0) return;
+  //console.log('[History] navigate dir:', direction, 'currentIdx:', state.promptHistoryIndex, 'total:', state.promptHistory.length);
+  if (state.promptHistory.length === 0) {
+    //console.log('[History] empty, cannot navigate');
+    return;
+  }
+  // If index is at initial position (pointing past the end), start from the last item
+  if (state.promptHistoryIndex < 0 || state.promptHistoryIndex > state.promptHistory.length) {
+    state.promptHistoryIndex = state.promptHistory.length;
+  }
+  var newIdx = state.promptHistoryIndex + direction;
   var newIdx = state.promptHistoryIndex + direction;
   if (newIdx < 0 || newIdx > state.promptHistory.length) return;
   state.promptHistoryIndex = newIdx;
@@ -1091,14 +1100,18 @@ document.addEventListener('DOMContentLoaded', function() {
     // Show prompt toolbar when selection exists (same as main toolbar)
     // Page Up/Down for history navigation
     promptInput.addEventListener('keydown', function(e) {
-      if (e.key === 'PageUp') {
+      var key = e.key || e.code || '';
+      console.log('[Prompt] keydown:', key, 'history:', state.promptHistory.length, 'idx:', state.promptHistoryIndex);
+      if (key === 'PageUp' || key === 'Page_Up') {
         e.preventDefault();
         navigatePromptHistory(-1);
-      } else if (e.key === 'PageDown') {
+      } else if (key === 'PageDown' || key === 'Page_Down') {
         e.preventDefault();
         navigatePromptHistory(1);
       }
     });
+    // Save to history when user confirms (via ✓ button handlers below)
+    // No automatic save — only on explicit confirm.
     // Save to history on Enter (without Shift) — but don't submit
     // Actually, save when input loses focus or on change
     promptInput.addEventListener('change', function() {
@@ -1126,6 +1139,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.regionCaptureAPI.confirmRegion({
         imageDataUrl: dataUrl,
         customPrompt: customText || '',
+        promptHistory: state.promptHistory,
       });
     }
   });
@@ -1144,6 +1158,13 @@ document.addEventListener('DOMContentLoaded', function() {
     state.screenW = data.screenBounds.width;
     state.screenH = data.screenBounds.height;
     var dpr = data.dpr || 1;
+
+    // Restore prompt history from main process
+    if (data.promptHistory && Array.isArray(data.promptHistory)) {
+      state.promptHistory = data.promptHistory.slice();
+      state.promptHistoryIndex = state.promptHistory.length;
+      console.log('[History] restored:', state.promptHistory.length, 'items');
+    }
 
     // Set canvas to physical pixel dimensions for sharp rendering
     // Use CSS to constrain display size to the window
@@ -1396,6 +1417,7 @@ document.addEventListener('DOMContentLoaded', function() {
       window.regionCaptureAPI.confirmRegion({
         imageDataUrl: dataUrl,
         customPrompt: customText || '',
+        promptHistory: state.promptHistory,
       });
     }
   });
