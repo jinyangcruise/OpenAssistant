@@ -13,8 +13,9 @@ contextBridge.exposeInMainWorld('regionCaptureAPI', {
   },
 
   // Renderer → Main: user confirmed selection with final image
-  confirmRegion: (imageDataUrl) => {
-    ipcRenderer.send('region-capture-confirm', imageDataUrl);
+  // data: { imageDataUrl: string, customPrompt?: string }
+  confirmRegion: (data) => {
+    ipcRenderer.send('region-capture-confirm', data);
   },
 
   // Renderer → Main: user cancelled

@@ -220,6 +220,78 @@ canvas#displayCanvas {
   word-wrap: break-word;
 }
 
+/* ── Custom prompt toolbar ── */
+#promptToolbar {
+  display: none;
+  position: fixed;
+  z-index: 15;
+  background: rgba(42, 42, 42, 0.94);
+  border-radius: 8px;
+  padding: 6px 8px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  align-items: center;
+  gap: 6px;
+  cursor: grab;
+  user-select: none;
+}
+#promptToolbar:active { cursor: grabbing; }
+#promptToolbar .pt-label {
+  font-size: 10px;
+  color: #888;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+#promptToolbar textarea {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #ccc;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 4px;
+  padding: 10px 6px 4px;
+  font-size: 12px;
+  line-height: 1.4;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  width: 300px;
+  height: 36px;
+  min-height: 36px;
+  max-height: 120px;
+  flex-shrink: 0;
+}
+#promptToolbar textarea:focus {
+  border-color: #FFD700;
+}
+#promptToolbar textarea::-webkit-scrollbar {
+  width: 6px;
+}
+#promptToolbar textarea::-webkit-scrollbar-track {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+#promptToolbar textarea::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.2);
+  border-radius: 3px;
+}
+#promptToolbar .pt-clear {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px; height: 22px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: all 0.15s;
+}
+#promptToolbar .pt-clear:hover { background: rgba(255,255,255,0.1); color: #fff; }
+
 /* ── Pencil settings popup ── */
 #pencilSettings {
   display: none;
@@ -368,6 +440,16 @@ canvas#displayCanvas {
   <div class="swatch" data-tcolor="#4A9EFF" style="background:#4A9EFF"></div>
   <div class="swatch" data-tcolor="#4ADE80" style="background:#4ADE80"></div>
   <div class="swatch" data-tcolor="#FFFFFF" style="background:#FFFFFF"></div>
+</div>
+
+<!-- ── Custom prompt toolbar ── -->
+<div id="promptToolbar">
+  <span class="pt-label">PROMPT</span>
+  <textarea id="promptInput" placeholder="Custom prompt (leave empty to use default)"></textarea>
+  <button class="pt-clear" id="promptClearBtn" title="Clear">✕</button>
+  <span class="toolbar-sep"></span>
+  <button class="toolbar-btn confirm" id="promptConfirmBtn" title="Confirm">✓</button>
+  <button class="toolbar-btn cancel" id="promptCancelBtn" title="Cancel">✕</button>
 </div>
 
 <!-- ── Text input overlay ── -->

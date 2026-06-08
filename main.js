@@ -669,13 +669,16 @@ function startRegionCapture(fullScreenshotBuffer) {
   return new Promise(function(resolve, reject) {
     var settled = false;
 
-    function onConfirm(_event, imageDataUrl) {
+    function onConfirm(_event, data) {
       if (settled) return;
       settled = true;
       cleanup();
       try {
-        var img = nativeImage.createFromDataURL(imageDataUrl);
-        resolve(img.toPNG());
+        var img = nativeImage.createFromDataURL(data.imageDataUrl || data);
+        resolve({
+          buffer: img.toPNG(),
+          customPrompt: data.customPrompt || '',
+        });
       } catch (e) {
         reject(e);
       }
@@ -756,7 +759,13 @@ async function handleShortcut(agentId, promptId, modeId) {
 
       // Launch region capture UI (blocks until confirm/cancel)
       try {
-        screenshotBuffer = await startRegionCapture(fullBuffer);
+        var regionResult = await startRegionCapture(fullBuffer);
+        screenshotBuffer = regionResult.buffer;
+        // Override prompt with custom user input if provided
+        var customUserPrompt = regionResult.customPrompt || '';
+        if (customUserPrompt) {
+          console.log('Using custom user prompt from region capture');
+        }
         console.log('Region captured:', screenshotBuffer.length, 'bytes');
       } catch (regionErr) {
         if (regionErr.name === 'AbortError') {
@@ -812,6 +821,11 @@ async function handleShortcut(agentId, promptId, modeId) {
     // Replace {app} placeholder with the active window title (works for all prompts)
     if (customPrompt && activeWindow && activeWindow.title) {
       customPrompt = customPrompt.replace(/\{app\}/g, activeWindow.title);
+    }
+
+    // Override with user's custom prompt from region capture UI if provided
+    if (typeof customUserPrompt !== 'undefined' && customUserPrompt) {
+      customPrompt = customUserPrompt;
     }
 
     // 4. Analyze with specified AI Agent (with optional streaming)

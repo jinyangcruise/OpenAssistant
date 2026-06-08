@@ -62,6 +62,14 @@ var state = {
   dragTextIndex: -1,
   dragTextOffset: { x: 0, y: 0 },
 
+  // Prompt toolbar
+  promptHistory: [], // user's custom prompt history (since app start)
+  promptHistoryIndex: -1, // current index for Page Up/Down navigation
+  isDraggingPrompt: false,
+  promptDragStart: { x: 0, y: 0 },
+  promptDragOffset: { x: 0, y: 0 },
+  promptManuallyPositioned: false, // true after user drags the toolbar
+
   // Shape settings
   shapeType: 'rect', // 'rect' | 'ellipse' | 'line' | 'arrow'
   shapeFillColor: null, // null = no fill
@@ -78,7 +86,7 @@ var state = {
 
 // ─── DOM refs ──────────────────────────────────────────────────────────────
 
-var canvas, ctx, toolbar, pencilSettings, shapeToolbar, fillPopup, strokePopup, textOverlay, textArea, textColorSettings;
+var canvas, ctx, toolbar, pencilSettings, shapeToolbar, fillPopup, strokePopup, textOverlay, textArea, textColorSettings, promptToolbar, promptInput;
 
 // ─── Handle rect helper ────────────────────────────────────────────────────
 
@@ -294,10 +302,12 @@ function updateToolbar() {
   var sel = state.sel;
   if (!sel || sel.w <= 0 || sel.h <= 0) {
     toolbar.style.display = 'none';
+    if (promptToolbar && !state.isDraggingPrompt) promptToolbar.style.display = 'none';
     return;
   }
 
   toolbar.style.display = 'flex';
+  if (promptToolbar && !state.isDraggingPrompt) promptToolbar.style.display = 'flex';
 
   // Read actual toolbar dimensions after making it visible briefly
   var tbW = toolbar.offsetWidth || 280;
@@ -315,7 +325,9 @@ function updateToolbar() {
   var spaceBelow = sh - (sel.y + sel.h);
   var spaceAbove = sel.y;
   var shapeTbH = (shapeToolbar && state.currentTool === 'shape') ? (shapeToolbar.offsetHeight || 36) : 0;
-  var bothH = tbH + (shapeTbH > 0 ? shapeTbH + 4 : 0);
+  var promptTbH = (promptToolbar && promptToolbar.style.display === 'flex') ? (promptToolbar.offsetHeight || 48) : 0;
+  var extraH = shapeTbH + (promptTbH > 0 ? promptTbH + 4 : 0);
+  var bothH = tbH + (extraH > 0 ? extraH + 4 : 0);
 
   // Priority: both below > both above > main only below > main only above
   if (bothH > 0 && spaceBelow >= bothH + TOOLBAR_GAP) {
@@ -334,9 +346,13 @@ function updateToolbar() {
   toolbar.style.left = tx + 'px';
   toolbar.style.top = ty + 'px';
 
-  // Also reposition shape toolbar if it's visible
+  // Reposition shape toolbar if visible
   if (shapeToolbar && state.currentTool === 'shape') {
     positionShapeToolbar();
+  }
+  // Reposition prompt toolbar if not being dragged and not manually positioned
+  if (promptToolbar && promptToolbar.style.display === 'flex' && !state.isDraggingPrompt && !state.promptManuallyPositioned) {
+    positionPromptToolbar();
   }
 }
 
@@ -788,6 +804,13 @@ function onMouseMove(e) {
     return;
   }
 
+  // Prompt toolbar drag
+  if (state.isDraggingPrompt && promptToolbar) {
+    promptToolbar.style.left = (mx - state.promptDragOffset.x) + 'px';
+    promptToolbar.style.top = (my - state.promptDragOffset.y) + 'px';
+    return;
+  }
+
   // Text dragging
   if (state.isDraggingText && state.dragTextIndex >= 0) {
     var ta = state.annotations[state.dragTextIndex];
@@ -863,6 +886,12 @@ function onMouseUp(e) {
     state.dragTextIndex = -1;
     return;
   }
+
+  if (state.isDraggingPrompt) {
+    state.isDraggingPrompt = false;
+    state.promptManuallyPositioned = true;
+    return;
+  }
 }
 
 // ─── Tool selection ────────────────────────────────────────────────────────
@@ -881,6 +910,29 @@ function selectTool(tool) {
     shapeToolbar.style.display = 'none';
     fillPopup.style.display = 'none';
     strokePopup.style.display = 'none';
+  }
+}
+
+// ─── Prompt history ────────────────────────────────────────────────────────
+
+function saveToPromptHistory(text) {
+  if (!text || !text.trim()) return;
+  text = text.trim();
+  // Don't save duplicates
+  if (state.promptHistory.length > 0 && state.promptHistory[state.promptHistory.length - 1] === text) return;
+  state.promptHistory.push(text);
+  state.promptHistoryIndex = state.promptHistory.length; // past the end (for PageDown)
+}
+
+function navigatePromptHistory(direction) {
+  if (state.promptHistory.length === 0) return;
+  var newIdx = state.promptHistoryIndex + direction;
+  if (newIdx < 0 || newIdx > state.promptHistory.length) return;
+  state.promptHistoryIndex = newIdx;
+  if (newIdx === state.promptHistory.length) {
+    promptInput.value = '';
+  } else {
+    promptInput.value = state.promptHistory[newIdx];
   }
 }
 
@@ -958,6 +1010,33 @@ function positionShapeToolbar() {
   shapeToolbar.style.top = ty + 'px';
 }
 
+// ─── Prompt toolbar positioning ────────────────────────────────────────────
+
+function positionPromptToolbar() {
+  // Stack below the main toolbar (same side as shape toolbar)
+  var mainTbRect = toolbar.getBoundingClientRect();
+  var belowMain = mainTbRect.bottom + 4;
+
+  // If shape toolbar is above main, stack prompt below main (and vice versa)
+  if (shapeToolbar && shapeToolbar.style.display === 'flex') {
+    var stRect = shapeToolbar.getBoundingClientRect();
+    if (stRect.bottom < mainTbRect.top) {
+      // Shape is above main → place prompt below main
+      promptToolbar.style.top = belowMain + 'px';
+    } else {
+      // Shape is below main → place prompt below shape
+      promptToolbar.style.top = (stRect.bottom + 4) + 'px';
+    }
+  } else {
+    promptToolbar.style.top = belowMain + 'px';
+  }
+
+  // Center horizontally with selection
+  var cx = state.sel.x + state.sel.w / 2;
+  var tbW = promptToolbar.offsetWidth || 380;
+  promptToolbar.style.left = Math.max(4, Math.min(state.screenW - tbW - 4, cx - tbW / 2)) + 'px';
+}
+
 // ─── Generic popup positioning ─────────────────────────────────────────────
 
 function positionPopup(popup, anchorEl) {
@@ -1003,6 +1082,62 @@ document.addEventListener('DOMContentLoaded', function() {
   // Initial pencil button color indicator
   var pencilBtn = toolbar.querySelector('[data-tool="pencil"]');
   if (pencilBtn) pencilBtn.style.color = state.pencilColor;
+
+  // ── Prompt toolbar init ──
+  promptToolbar = document.getElementById('promptToolbar');
+  promptInput = document.getElementById('promptInput');
+  if (promptToolbar) promptToolbar.style.display = 'none';
+  if (promptInput) {
+    // Show prompt toolbar when selection exists (same as main toolbar)
+    // Page Up/Down for history navigation
+    promptInput.addEventListener('keydown', function(e) {
+      if (e.key === 'PageUp') {
+        e.preventDefault();
+        navigatePromptHistory(-1);
+      } else if (e.key === 'PageDown') {
+        e.preventDefault();
+        navigatePromptHistory(1);
+      }
+    });
+    // Save to history on Enter (without Shift) — but don't submit
+    // Actually, save when input loses focus or on change
+    promptInput.addEventListener('change', function() {
+      saveToPromptHistory(this.value);
+    });
+    // Auto-expand height up to 5 lines, then scroll
+    promptInput.addEventListener('input', function() {
+      this.style.height = '';
+      var lineH = 17; // approximate line height at 12px font
+      var maxH = lineH * 5 + 8; // 5 lines + padding
+      this.style.height = Math.min(this.scrollHeight, maxH) + 'px';
+      this.style.overflowY = this.scrollHeight > maxH ? 'auto' : 'hidden';
+    });
+  }
+  document.getElementById('promptClearBtn').addEventListener('click', function() {
+    promptInput.value = '';
+    promptInput.focus();
+  });
+  document.getElementById('promptConfirmBtn').addEventListener('click', function() {
+    // Same as main confirm
+    var dataUrl = buildFinalImage();
+    if (dataUrl) {
+      var customText = promptInput.value.trim();
+      saveToPromptHistory(customText);
+      window.regionCaptureAPI.confirmRegion({
+        imageDataUrl: dataUrl,
+        customPrompt: customText || '',
+      });
+    }
+  });
+  document.getElementById('promptCancelBtn').addEventListener('click', onCancel);
+  // Prompt toolbar drag start
+  promptToolbar.addEventListener('mousedown', function(e) {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+    state.isDraggingPrompt = true;
+    state.promptDragStart = { x: e.clientX, y: e.clientY };
+    var rect = promptToolbar.getBoundingClientRect();
+    state.promptDragOffset = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  });
 
   // Listen for capture start from main process
   window.regionCaptureAPI.onCaptureStart(function(data) {
@@ -1256,7 +1391,12 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('confirmBtn').addEventListener('click', function() {
     var dataUrl = buildFinalImage();
     if (dataUrl) {
-      window.regionCaptureAPI.confirmRegion(dataUrl);
+      var customText = promptInput.value.trim();
+      saveToPromptHistory(customText);
+      window.regionCaptureAPI.confirmRegion({
+        imageDataUrl: dataUrl,
+        customPrompt: customText || '',
+      });
     }
   });
 
