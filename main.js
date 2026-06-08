@@ -681,11 +681,19 @@ function startRegionCapture(fullScreenshotBuffer) {
           regionPromptHistory = data.promptHistory;
           //console.log('[History] updated, total:', regionPromptHistory.length);
         }
-        var img = nativeImage.createFromDataURL(data.imageDataUrl || data);
-        resolve({
-          buffer: img.toPNG(),
-          customPrompt: data.customPrompt || '',
-        });
+        if (data.skipScreenshot) {
+          resolve({
+            buffer: null,
+            skipScreenshot: true,
+            customPrompt: data.customPrompt || '',
+          });
+        } else {
+          var img = nativeImage.createFromDataURL(data.imageDataUrl || data);
+          resolve({
+            buffer: img.toPNG(),
+            customPrompt: data.customPrompt || '',
+          });
+        }
       } catch (e) {
         reject(e);
       }
@@ -768,13 +776,21 @@ async function handleShortcut(agentId, promptId, modeId) {
       // Launch region capture UI (blocks until confirm/cancel)
       try {
         var regionResult = await startRegionCapture(fullBuffer);
-        screenshotBuffer = regionResult.buffer;
+        if (regionResult.skipScreenshot) {
+          screenshotBuffer = null;
+        } else {
+          screenshotBuffer = regionResult.buffer;
+        }
         // Override prompt with custom user input if provided
         var customUserPrompt = regionResult.customPrompt || '';
         if (customUserPrompt) {
           console.log('Using custom user prompt from region capture');
         }
-        console.log('Region captured:', screenshotBuffer.length, 'bytes');
+        if (regionResult.skipScreenshot) {
+          console.log('Screenshot disabled by user toggle, sending text only');
+        } else {
+          console.log('Region captured:', screenshotBuffer.length, 'bytes');
+        }
       } catch (regionErr) {
         if (regionErr.name === 'AbortError') {
           console.log('Region capture cancelled by user');
@@ -809,7 +825,7 @@ async function handleShortcut(agentId, promptId, modeId) {
       console.log('Taking full screenshot...');
       screenshotBuffer = await takeScreenshot();
     }
-    console.log('Screenshot captured:', screenshotBuffer.length, 'bytes');
+    console.log('Screenshot captured:', screenshotBuffer ? screenshotBuffer.length + ' bytes' : 'skipped (text only)');
 
     // 3. Get prompt text based on the promptId that triggered this shortcut
     let customPrompt = null;

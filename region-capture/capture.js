@@ -77,6 +77,9 @@ var state = {
   shapeStrokeColor: '#FF6B6B',
   shapeStrokeOpacity: 1,
 
+  // Skip screenshot toggle
+  skipScreenshot: false,
+
   // Annotations
   annotations: [], // array of stroke objects
   redoStack: [], // undone annotations for redo
@@ -1070,6 +1073,29 @@ function positionPopup(popup, anchorEl) {
   popup.style.top = py + 'px';
 }
 
+// ─── Confirm ───────────────────────────────────────────────────────────────
+
+function doConfirm() {
+  var customText = (promptInput && promptInput.value.trim()) || '';
+  saveToPromptHistory(customText);
+  if (state.skipScreenshot) {
+    window.regionCaptureAPI.confirmRegion({
+      skipScreenshot: true,
+      customPrompt: customText || '',
+      promptHistory: state.promptHistory,
+    });
+  } else {
+    var dataUrl = buildFinalImage();
+    if (dataUrl) {
+      window.regionCaptureAPI.confirmRegion({
+        imageDataUrl: dataUrl,
+        customPrompt: customText || '',
+        promptHistory: state.promptHistory,
+      });
+    }
+  }
+}
+
 // ─── Cancel ────────────────────────────────────────────────────────────────
 
 function onCancel() {
@@ -1110,16 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
         navigatePromptHistory(1);
       } else if (key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
-        var dataUrl = buildFinalImage();
-        if (dataUrl) {
-          var customText = promptInput.value.trim();
-          saveToPromptHistory(customText);
-          window.regionCaptureAPI.confirmRegion({
-            imageDataUrl: dataUrl,
-            customPrompt: customText || '',
-            promptHistory: state.promptHistory,
-          });
-        }
+        doConfirm();
       }
     });
     // Save to history when user confirms (via ✓ button handlers below)
@@ -1142,20 +1159,28 @@ document.addEventListener('DOMContentLoaded', function() {
     promptInput.value = '';
     promptInput.focus();
   });
-  document.getElementById('promptConfirmBtn').addEventListener('click', function() {
-    // Same as main confirm
-    var dataUrl = buildFinalImage();
-    if (dataUrl) {
-      var customText = promptInput.value.trim();
-      saveToPromptHistory(customText);
-      window.regionCaptureAPI.confirmRegion({
-        imageDataUrl: dataUrl,
-        customPrompt: customText || '',
-        promptHistory: state.promptHistory,
-      });
-    }
-  });
+  document.getElementById('promptConfirmBtn').addEventListener('click', doConfirm);
   document.getElementById('promptCancelBtn').addEventListener('click', onCancel);
+
+  // ── Screenshot toggle ──
+  var toggleBtn = document.getElementById('screenshotToggle');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', function() {
+      state.skipScreenshot = !state.skipScreenshot;
+      if (state.skipScreenshot) {
+        this.classList.remove('toggle-on');
+        this.classList.add('toggle-off');
+        this.textContent = '⊘';
+        this.title = 'Screenshot disabled (click to enable)';
+      } else {
+        this.classList.remove('toggle-off');
+        this.classList.add('toggle-on');
+        this.textContent = '◉';
+        this.title = 'Screenshot enabled (click to disable)';
+      }
+    });
+  }
+
   // Prompt toolbar drag start
   promptToolbar.addEventListener('mousedown', function(e) {
     if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
@@ -1421,18 +1446,7 @@ document.addEventListener('DOMContentLoaded', function() {
     this.style.height = Math.max(28, Math.min(200, this.scrollHeight)) + 'px';
   });
 
-  document.getElementById('confirmBtn').addEventListener('click', function() {
-    var dataUrl = buildFinalImage();
-    if (dataUrl) {
-      var customText = promptInput.value.trim();
-      saveToPromptHistory(customText);
-      window.regionCaptureAPI.confirmRegion({
-        imageDataUrl: dataUrl,
-        customPrompt: customText || '',
-        promptHistory: state.promptHistory,
-      });
-    }
-  });
+  document.getElementById('confirmBtn').addEventListener('click', doConfirm);
 
   document.getElementById('cancelBtn').addEventListener('click', onCancel);
 

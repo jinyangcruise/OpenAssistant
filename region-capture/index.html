@@ -52,6 +52,10 @@ canvas#displayCanvas {
 .toolbar-btn.confirm:hover { background: rgba(74,222,128,0.15); color: #4ade80; }
 .toolbar-btn.cancel { color: #f87171; }
 .toolbar-btn.cancel:hover { background: rgba(248,113,113,0.15); color: #f87171; }
+.toolbar-btn.toggle-on { color: #4ade80 !important; }
+.toolbar-btn.toggle-on:hover { background: rgba(74,222,128,0.15) !important; }
+.toolbar-btn.toggle-off { color: #f87171 !important; }
+.toolbar-btn.toggle-off:hover { background: rgba(248,113,113,0.15) !important; }
 .toolbar-sep { width: 1px; height: 24px; background: rgba(255,255,255,0.15); margin: 0 4px; }
 .tool-label {
   font-size: 11px;
@@ -359,6 +363,8 @@ canvas#displayCanvas {
   <span class="toolbar-sep"></span>
   <button class="toolbar-btn" data-tool="undo" title="Undo">↩</button>
   <button class="toolbar-btn" data-tool="redo" title="Redo">↪</button>
+  <span class="toolbar-sep"></span>
+  <button class="toolbar-btn toggle-on" id="screenshotToggle" title="Send screenshot (click to toggle)">◉</button>
   <span class="toolbar-sep"></span>
   <button class="toolbar-btn confirm" id="confirmBtn" title="Confirm">✓</button>
   <button class="toolbar-btn cancel" id="cancelBtn" title="Cancel">✕</button>

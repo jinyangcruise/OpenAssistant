@@ -919,11 +919,15 @@ return response;
         debugLog('analyze: init message failed (harmless):', e.message);
       }
 
-      // 3. Save screenshot and upload
-      tmpFile = this._saveTempScreenshot(screenshotBuffer);
-      debugLog('analyze: uploading screenshot...');
-      await this._uploadScreenshot(page, tmpFile);
-      debugLog('analyze: screenshot upload done');
+      // 3. Save screenshot and upload (if provided)
+      if (screenshotBuffer) {
+        tmpFile = this._saveTempScreenshot(screenshotBuffer);
+        debugLog('analyze: uploading screenshot...');
+        await this._uploadScreenshot(page, tmpFile);
+        debugLog('analyze: screenshot upload done');
+      } else {
+        debugLog('analyze: no screenshot buffer, skipping upload');
+      }
 
       // 5. Build the prompt — now loaded from config by main.js
       const prompt =
