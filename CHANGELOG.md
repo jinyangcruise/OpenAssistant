@@ -1,5 +1,39 @@
 # Changelog
 
+## v0.5.7 — 2026-06-08
+
+### English
+
+#### New Features
+- **Custom prompt in region capture**: Added a dedicated toolbar with multi-line text input, allowing users to enter a custom prompt per capture session. Press Enter to confirm, Shift+Enter for newline. Page Up/Down navigates input history.
+- **Skip screenshot toggle**: Added a green ◉ / red ⊘ toggle on the main toolbar. When disabled, only text is sent to the AI agent — the screenshot is not uploaded.
+- **i18n for region capture UI**: All toolbar labels, tooltips, shape names, color/fill/stroke settings, and prompt placeholder now follow the app's language setting (Chinese / English).
+
+#### Improvements
+- **Enter-to-confirm**: In the prompt textarea, Enter now submits (same as clicking ✓). Shift+Enter inserts a newline.
+- **Null buffer safety**: Doubao adapter skips screenshot upload when buffer is null; main.js handles null buffer gracefully in log output.
+
+#### Changes
+- Version bumped to 0.5.7
+
+---
+
+### 中文
+
+#### 新增功能
+- **矩形截图自定义提示词**：新增专用工具栏，带多行文本输入框，每次截图可输入自定义提示词。按 Enter 确认，Shift+Enter 换行。Page Up/Page Down 浏览输入历史。
+- **跳过截图开关**：主工具栏新增绿色 ◉ / 红色 ⊘ 切换按钮。关闭后仅发送文字给 AI 助手，不上传截图。
+- **矩形截图界面多语言**：工具栏标签、工具提示、形状名称、颜色/填充/描边设置、提示词占位符等均跟随应用语言设置（中文/英文）。
+
+#### 改进
+- **回车确认**：提示词输入框中按 Enter 直接确认提交（同点击 ✓），Shift+Enter 换行。
+- **空缓冲区安全处理**：豆包适配器在截图缓冲区为空时跳过上传；主日志正确处理空缓冲区。
+
+#### 变更
+- 版本号更新至 0.5.7
+
+---
+
 ## v0.5.6 — 2026-05-27
 
 ### English
@@ -21,6 +55,8 @@
 
 #### 变更
 - 版本号更新至 0.5.6
+
+---
 
 ## v0.5.5 — 2026-05-26
 
