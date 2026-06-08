@@ -1108,6 +1108,18 @@ document.addEventListener('DOMContentLoaded', function() {
       } else if (key === 'PageDown' || key === 'Page_Down') {
         e.preventDefault();
         navigatePromptHistory(1);
+      } else if (key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        var dataUrl = buildFinalImage();
+        if (dataUrl) {
+          var customText = promptInput.value.trim();
+          saveToPromptHistory(customText);
+          window.regionCaptureAPI.confirmRegion({
+            imageDataUrl: dataUrl,
+            customPrompt: customText || '',
+            promptHistory: state.promptHistory,
+          });
+        }
       }
     });
     // Save to history when user confirms (via ✓ button handlers below)
