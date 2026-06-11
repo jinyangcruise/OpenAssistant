@@ -79,6 +79,9 @@
       "category": "Development",
       "artifactName": "OpenAssistant-${version}.${ext}"
     },
+    "asarUnpack": [
+      "node_modules/screenshot-desktop/**/*"
+    ],
     "nsis": {
       "oneClick": false,
       "perMachine": true,
